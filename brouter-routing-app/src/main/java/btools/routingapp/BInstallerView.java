@@ -151,6 +151,7 @@ public class BInstallerView extends View {
     viewscale = Math.max(scaleX, scaleY);
 
     mat.preScale(viewscale, viewscale, bmp.getWidth() /2f, 0);
+    mat.preTranslate(-Math.max(0, (bmp.getWidth() - getWidth()) /2f / viewscale), 0);
     setRatio(1f, bmp.getWidth() /2f, bmp.getHeight() /2f);
 
     tilesVisible = false;
