@@ -188,10 +188,10 @@ public class BInstallerView extends View {
 
     paintTiles.setStyle(Paint.Style.FILL);
     paintTiles.setAntiAlias(true);
-    paintTiles.setColor(0x80888888);
+    paintTiles.setColor(0x80666666);
     paintTiles.setStrokeWidth(2);
     drawSelectedTiles(canvas, paintTiles, fw, fh, MASK_INSTALLED_RD5, mask3);
-    paintTiles.setColor(0x800000ff);
+    paintTiles.setColor(0x800060ff);
     paintTiles.setStrokeWidth(2);
     drawSelectedTiles(canvas, paintTiles, fw, fh, MASK_INSTALLED_RD5 | MASK_CURRENT_RD5, mask3);
     paintTiles.setColor(0x8000ff00);
