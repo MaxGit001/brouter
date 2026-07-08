@@ -22,8 +22,9 @@ You control the loop with a few request parameters:
 | :----- | :----- |
 | `roundTripLength` | desired total loop length in meters (takes precedence over `roundTripDistance`) |
 | `roundTripDistance` | search radius in meters; the loop length is roughly `2π × radius` |
-| `roundTripPoints` | target number of intermediate waypoints (3–20, default 5) |
-| `startDirection` / `heading` | compass bearing to bias the direction the loop heads out |
+| `roundTripPoints` | accepted for backward compatibility but ignored — the planners derive their own waypoint count |
+| `startDirection` / `heading` | compass bearing to bias the direction the loop heads out; without it the start bearing is drawn randomly, so fix it whenever the loop should be reproducible |
+| `alternativeidx` | deterministic loop variety seed (`0` = default loop, any value ≥ 0 gives a reproducible variant — see [note below](#loop-quality)) |
 | `roundTripDirectionAdd` | angle offset added to an auto-detected start bearing |
 | `roundTripAlgorithm` | `AUTO` (default — best loop) or `FAST` (quick preview); the internal engine names `WAYPOINT`, `GREEDY`, `ISO_GREEDY`, `ISOCHRONE` are also accepted for forced selection — see below |
 | `roundTripStrictQuality` | `1` hard-rejects loops that fail the quality checks; default `0` is lenient — a failing loop is still returned, tagged with a `Warning:` advisory (see [Loop quality](#loop-quality)) |
