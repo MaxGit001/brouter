@@ -118,17 +118,13 @@ assign islinktype = highway=motorway_link|trunk_link|primary_link|secondary_link
 
 # Motorcycle scenic tuning ----------------------------------------------------
 # In KinematicModel, length-dependent penalties should be expressed as speed caps.
-# A 5 km tunnel capped to 12 km/h is punished much more than a 100 m underpass.
+# A 5 km tunnel capped to 12 km/h is punished much more than a short tunnel.
 assign tunnel_speedcap =
   if ( or ( not avoid_tunnels ) ( equal tunnel_avoidance 0 ) ) then 999
   else if tunnel=yes then
     ( if greater tunnel_avoidance 2 then 8
       else if equal tunnel_avoidance 2 then 12
       else 20 )
-  else if covered=yes then
-    ( if greater tunnel_avoidance 2 then 25
-      else if equal tunnel_avoidance 2 then 35
-      else 50 )
   else 999
 
 assign city_speedcap =
