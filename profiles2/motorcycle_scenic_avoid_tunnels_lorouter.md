@@ -28,10 +28,11 @@ assign vmax                = 85
 ## Behaviour
 
 - `tunnel=yes`: capped to 20 / 12 / 8 km/h depending on avoidance strength.
-- `covered=yes`: capped to 50 / 35 / 25 km/h.
 - City roads: residential/living/service/30-zone/urban tags get lower caps.
 - Motorway/trunk/primary roads: not forbidden, but speed-capped so they are less attractive for scenic motorcycle routing.
 - Secondary/tertiary/unclassified roads remain largely untouched, so rural and pass-style roads are preferred indirectly.
+
+Note: `covered=yes` is intentionally not used. Some LoRouter/BRouter lookup tables do not contain the `covered` key, which causes `ParseException: unknown lookup name: covered`.
 
 ## Installation
 
