@@ -1,5 +1,5 @@
 #
-# Motorcycle scenic / avoid tunnels profile for LocusMap LoRouter
+# Motorcycle scenic / avoid tunnels / avoid cities profile for LocusMap LoRouter
 # Based on current LocusMap LoCarVarioEco.brf (KinematicModel).
 # Uses current allow_* switch style and avoids unsupported lookup keys.
 # Car-Routing based on a kinematic model
@@ -29,6 +29,7 @@ assign allow_ferries       = true   # %allow_ferries% | Allow ferries | boolean
 # Motorcycle scenic switches
 assign avoid_tunnels       = true   # %avoid_tunnels% | Avoid tunnels if possible | boolean
 assign tunnel_avoidance    = 2      # %tunnel_avoidance% | Tunnel avoidance strength | [0=off, 1=medium, 2=strong, 3=extreme]
+assign avoid_cities        = true   # %avoid_cities% | Avoid cities / dense urban routing | boolean
 assign city_avoidance      = 2      # %city_avoidance% | City avoidance strength | [0=off, 1=medium, 2=strong, 3=extreme]
 assign prefer_scenic_roads = true   # %prefer_scenic_roads% | Prefer rural/pass roads | boolean
 assign avoid_small_bad_roads = true # %avoid_small_bad_roads% | Prefer paved rural roads | boolean
@@ -143,7 +144,7 @@ assign tunnel_speedcap =
   else 999
 
 assign city_speedcap =
-  if equal city_avoidance 0 then 999
+  if ( or ( not avoid_cities ) ( equal city_avoidance 0 ) ) then 999
   else if highway=living_street then
     ( if greater city_avoidance 2 then 8
       else if equal city_avoidance 2 then 12
