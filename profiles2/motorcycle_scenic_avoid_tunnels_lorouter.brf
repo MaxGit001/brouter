@@ -1,52 +1,61 @@
 #
 # Motorcycle scenic / avoid tunnels profile for LocusMap LoRouter
-# Based on uploaded LocusMap car-vario.brf (KinematicModel).
-# The original car-vario profile uses speed limits and the KinematicModel.
-# This variant therefore penalizes tunnels, cities and motorway-like roads
-# by reducing maxspeed caps rather than by adding classic costfactor offsets.
-#
+# Based on current LocusMap LoCarVarioEco.brf (KinematicModel).
+# Uses current allow_* switch style and avoids unsupported lookup keys.
 # Car-Routing based on a kinematic model
 #
 # Depending on the vmax-parameter (target-speed)
 # this can be anything from least-time routing to eco-routing
 #
+################################################################
+# Asamm routing: profile adapted from 'car-vario.brf'
+# 1.2021
+################################################################
 #
 ---model:btools.router.KinematicModel
 
 ---context:global
 
-# Motorcycle scenic profile for LoRouter/BRouter KinematicModel
+# Car profile
 assign validForCars        = true
 
 # Use the following switches to change behaviour
-assign avoid_toll          = false  # %avoid_toll% | Avoid paid roads | boolean
-assign avoid_unpaved       = false  # %avoid_unpaved% | Avoid unpaved roads, if possible | boolean
-assign avoid_motorways     = false  # %avoid_motorways% | Avoid motorways | boolean
+
+assign allow_toll          = true   # %allow_toll% | Allow paid roads | boolean
+assign allow_unpaved       = false  # %allow_unpaved% | Allow unpaved roads, if possible | boolean
+assign allow_motorways     = true   # %allow_motorways% | Allow motorways | boolean
+assign allow_ferries       = true   # %allow_ferries% | Allow ferries | boolean
 
 # Motorcycle scenic switches
-# KinematicModel profiles are mainly controlled by maxspeed/minspeed.
-# Therefore tunnels/cities/motorways are penalized by speed caps, not by classic costfactor offsets.
 assign avoid_tunnels       = true   # %avoid_tunnels% | Avoid tunnels if possible | boolean
 assign tunnel_avoidance    = 2      # %tunnel_avoidance% | Tunnel avoidance strength | [0=off, 1=medium, 2=strong, 3=extreme]
 assign city_avoidance      = 2      # %city_avoidance% | City avoidance strength | [0=off, 1=medium, 2=strong, 3=extreme]
 assign prefer_scenic_roads = true   # %prefer_scenic_roads% | Prefer rural/pass roads | boolean
 assign avoid_small_bad_roads = true # %avoid_small_bad_roads% | Prefer paved rural roads | boolean
 
+# Remap to previously used negative logic TODO - get rid of unnecesary remaping?
+assign avoid_toll = not allow_toll
+assign avoid_unpaved = not allow_unpaved
+assign avoid_motorways = not allow_motorways
+assign avoid_ferries = not allow_ferries
+
 # Kinematic model parameters
-assign vmax             = 85     # %vmax% | Target speed (in km/h), scenic motorcycle default | number
-assign recup_efficiency = 0.7    # %recup_efficiency% | (ratio) | number
-assign totalweight      = 1640   # %totalweight% | Total weight of the car (in kg) | number
-assign f_roll           = 232    # %f_roll% | Rolling friction (in Newton) | number
-assign f_air            = 0.4    # %f_air% | Drag force (in Newton / (m/s)^2), 0.5*cw*A*rho | number
-assign f_recup          = 400    # %f_recup% | Newton | number
-assign p_standby        = 250    # %p_standby% | Watt | number
+assign vmax             = 85     # Target speed (in km/h), scenic motorcycle default | number
+assign recup_efficiency = 0.7    # (ratio) | number
+assign totalweight      = 1640   # Total weight of the car (in kg) | number
+assign f_roll           = 232    # Rolling friction (in Newton) | number
+assign f_air            = 0.4    # Drag force (in Newton / (m/s)^2), 0.5*cw*A*rho | number
+assign f_recup          = 400    # Newton | number
+assign p_standby        = 250    # Watt | number
 
 # Turn instructions settings
-assign turnInstructionMode          = 1     # %turnInstructionMode% | Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style, 4=comment-style, 5=gpsies-style, 6=orux-style, 7=locus-old-style]
+assign turnInstructionMode          = 2     # Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style, 4=comment-style, 5=gpsies-style, 6=orux-style]
+assign turnInstructionCatchingRange = 20
 
 # Technical parameters
 assign pass1coefficient    = 1.3
 
+assign processUnusedTags    1 # 1 is old Brouter behaviour, 0 is new Brouter default, more efficient, but ignores tags not used by a profile. We need all tags for warnings.
 
 ---context:way   # following code refers to way-tags
 
@@ -55,7 +64,8 @@ assign classifier_none        = 1
 assign classifier_ferry       = 2
 
 assign is_avoided_toll_road and  avoid_toll toll=yes
-assign is_avoided_motorway and avoid_motorways highway=motorway|motorway_link
+assign is_avoided_motorway and avoid_motorways highway=motorway|motorway_link 
+assign is_avoided_ferry and avoid_ferries route=ferry 
 
 
 #
@@ -77,11 +87,15 @@ assign caraccess
                                    switch route=ferry                       1
                                    switch isresidentialorliving             1
                                    switch highway=service                   1
+                                   switch highway=track                     1
+                                   switch highway=proposed                  0
+                                   switch highway=construction              0
+                                   switch highway=abandoned                 0
                                    0
-                                   access=yes|permissive|designated|destination
-                            vehicle=yes|designated|destination
-                     motor_vehicle=yes|permissive|designated|destination
-              motorcar=yes|permissive|designated|destination
+                                   access=yes|permissive|designated|destination|unknown
+                            vehicle=yes|designated|destination|unknown
+                     motor_vehicle=yes|permissive|designated|destination|unknown
+              motorcar=yes|permissive|designated|destination|unknown
 
 assign caraccess_destination
        switch motorcar=
@@ -117,8 +131,9 @@ assign onewayspeedlimit = if isbadoneway then 0 else 999
 assign islinktype = highway=motorway_link|trunk_link|primary_link|secondary_link|tertiary_link
 
 # Motorcycle scenic tuning ----------------------------------------------------
-# In KinematicModel, length-dependent penalties should be expressed as speed caps.
-# A 5 km tunnel capped to 12 km/h is punished much more than a short tunnel.
+# KinematicModel routing is mainly influenced by maxspeed/minspeed.
+# Therefore long tunnels and urban roads are penalized by speed caps.
+# Avoids unsupported shelter/gallery lookup keys that some LoRouter tables reject.
 assign tunnel_speedcap =
   if ( or ( not avoid_tunnels ) ( equal tunnel_avoidance 0 ) ) then 999
   else if tunnel=yes then
@@ -168,9 +183,13 @@ assign badroad_speedcap =
 
 assign maxspeed_surface =
   switch or surface= surface=paved|asphalt|concrete 999
-  switch surface=paving_stones|cobblestone|sett 30
-  switch surface=fine_gravel ( switch avoid_unpaved 3 10 )
-  switch avoid_unpaved 1 2
+  switch surface=chipseal 80
+  switch surface=compacted 40
+  switch surface=paving_stones|cobblestone|sett|unpaved|gravel 30
+  switch surface=ground|dirt|grass|earth|grass_paver 20
+  switch surface=wood|mud|clay|metal|unhewn_cobblestone 10
+  switch surface=fine_gravel ( switch avoid_unpaved 10 40 )
+  switch avoid_unpaved 10 40
 
 assign maxspeed_tracktype =
   switch tracktype= 999
@@ -191,7 +210,13 @@ assign maxspeed_implicit =
   switch highway=bridleway                  10
   switch isresidentialorliving              30
   switch highway=service                    30
-  switch highway=track|road|path switch tracktype=grade1 30 5
+  switch highway=track|road|path 
+       switch tracktype=grade1 20
+       switch tracktype=grade2 5
+       switch tracktype=grade3 2
+       switch tracktype=grade4 0
+       switch tracktype=grade5 0
+       0
   0
 
 assign maxspeed_forward =
@@ -251,6 +276,7 @@ assign maxspeed_explicit =
 assign maxspeed =
   min if is_avoided_toll_road then 0 else 999
   min if is_avoided_motorway then 0 else 999
+  min if is_avoided_ferry then 0 else 999
   min onewayspeedlimit
   min accessspeedlimit
   min maxspeed_explicit
@@ -264,7 +290,7 @@ assign maxspeed =
 assign costfactor = if equal maxspeed 0 then 10000 else 0
 
 assign minspeed =
-    switch highway=motorway|motorway_link|trunk  75 0
+    if prefer_scenic_roads then 0 else switch highway=motorway|motorway_link|trunk 75 0
 
 # way priorities used for voice hint generation
 
@@ -317,11 +343,11 @@ assign caraccess
               switch motor_vehicle=
                      switch vehicle=
                             switch access=
-                                   not barrier=gate|bollard|lift_gate|cycle_barrier
-                                   access=yes|permissive|designated|destination
-                            vehicle=yes|permissive|designated|destination
-                     motor_vehicle=yes|permissive|designated|destination
-              motorcar=yes|permissive|designated|destination
+                                   not barrier=gate|swing_gate|bollard|lift_gate|cycle_barrier
+                                   access=yes|permissive|designated|destination|unknown
+                            vehicle=yes|permissive|designated|destination|unknown
+                     motor_vehicle=yes|permissive|designated|destination|unknown
+              motorcar=yes|permissive|designated|destination|unknown
 
 assign initialcost =
        switch and avoid_toll barrier=toll_booth 1000000
