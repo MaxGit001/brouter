@@ -1,54 +1,73 @@
 # motorcycle_scenic_avoid_tunnels_lorouter.brf
 
-LoRouter/LocusMap profile derived from the current uploaded `LoCarVarioEco.brf`.
+Motorcycle touring profile for LocusMap LoRouter and BRouter.
 
-## Why this version exists
+## Technical base
 
-The previous variant was based on an older `car-vario.brf`. The current Locus car profiles use:
+The profile is rebuilt from the current official BRouter `car-vario.brf` and uses:
 
 ```brf
 ---model:btools.router.KinematicModel
 ```
 
-and the current `allow_*` switch style:
+It therefore combines realistic speed/access handling with additive `costfactor` preferences.
+
+## Main options
 
 ```brf
-assign allow_toll      = true
-assign allow_unpaved   = false
-assign allow_motorways = true
-assign allow_ferries   = true
-```
-
-This profile follows that structure.
-
-## Main switches
-
-```brf
+assign avoid_toll          = false
+assign avoid_unpaved       = true
+assign avoid_motorways     = false
+assign consider_river      = false
+assign consider_forest     = false
+assign consider_town       = true
 assign avoid_tunnels       = true
 assign tunnel_avoidance    = 2
-assign avoid_cities        = true
-assign city_avoidance      = 2
 assign prefer_scenic_roads = true
-assign avoid_small_bad_roads = true
-assign vmax                = 85
 ```
 
-## Behaviour
+`consider_town` is the official BRouter city/big-town avoidance switch. It uses `estimated_town_class` rather than only checking residential roads or urban speed limits.
 
-- `tunnel=yes`: capped to 20 / 12 / 8 km/h depending on avoidance strength.
-- `avoid_cities=true`: activates the city avoidance block.
-- `city_avoidance`: controls how strongly residential/living/service/30-zone/urban tags are slowed down.
-- Motorway/trunk/primary roads: allowed but speed-capped so they are less attractive for scenic motorcycle routing.
-- Secondary/tertiary/unclassified roads remain mostly unchanged, so rural and pass-style roads are preferred indirectly.
-- Unsupported shelter/gallery lookup keys are not referenced, because some LoRouter/BRouter lookup tables reject them with `ParseException: unknown lookup name`.
+## Tunnel avoidance
 
-## Installation
+Tunnel penalties are added to the `costfactor`:
 
-Copy the `.brf` file to a BRouter/LoRouter profiles folder, for example:
+- `0`: off
+- `1`: medium, +20
+- `2`: strong, +50
+- `3`: extreme, +100
 
-```text
-/Android/data/menion.android.locus/files/Locus/router/profiles2/
-/Android/data/btools.routingapp/files/brouter/profiles2/
+Because the cost accumulates over distance, long tunnels are affected much more strongly than short tunnels or underpasses.
+
+## Scenic road preference
+
+With `prefer_scenic_roads=true`:
+
+- motorway and motorway links: +4
+- trunk and trunk links: +2
+- primary and primary links: +0.5
+- secondary, tertiary and unclassified roads: no additional penalty
+
+This keeps motorways available when necessary while preferring rural secondary and pass-style roads.
+
+## Motorcycle model
+
+The KinematicModel parameters are approximate values for a loaded touring motorcycle with rider and luggage:
+
+```brf
+assign vmax             = 90
+assign recup_efficiency = 0.0
+assign totalweight      = 360
+assign f_roll           = 55
+assign f_air            = 0.36
+assign f_recup          = 0
+assign p_standby        = 500
 ```
 
-If Android blocks direct access to `/Android/data`, place the file in `Download` and import/open it with Locus.
+They are routing approximations, not a calibrated fuel-consumption model for one specific motorcycle.
+
+## Compatibility
+
+The profile does not use the unsupported `covered` lookup. It uses the current official BRouter lookups `estimated_town_class`, `estimated_forest_class` and `estimated_river_class`.
+
+If a local LoRouter installation reports `unknown lookup name: estimated_town_class`, its routing-data/lookup version is older than the current BRouter-Web environment.
