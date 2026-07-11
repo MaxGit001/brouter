@@ -26,6 +26,7 @@ This profile follows that structure.
 ```brf
 assign avoid_tunnels       = true
 assign tunnel_avoidance    = 2
+assign avoid_cities        = true
 assign city_avoidance      = 2
 assign prefer_scenic_roads = true
 assign avoid_small_bad_roads = true
@@ -35,7 +36,8 @@ assign vmax                = 85
 ## Behaviour
 
 - `tunnel=yes`: capped to 20 / 12 / 8 km/h depending on avoidance strength.
-- City roads: residential/living/service/30-zone/urban tags get lower caps.
+- `avoid_cities=true`: activates the city avoidance block.
+- `city_avoidance`: controls how strongly residential/living/service/30-zone/urban tags are slowed down.
 - Motorway/trunk/primary roads: allowed but speed-capped so they are less attractive for scenic motorcycle routing.
 - Secondary/tertiary/unclassified roads remain mostly unchanged, so rural and pass-style roads are preferred indirectly.
 - Unsupported shelter/gallery lookup keys are not referenced, because some LoRouter/BRouter lookup tables reject them with `ParseException: unknown lookup name`.
